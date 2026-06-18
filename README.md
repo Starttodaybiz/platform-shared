@@ -2,7 +2,7 @@
 
 Shared React components and libraries used across the Start Today™ ecosystem.
 
-Owner: Start Today, LLC. Private. Do not redistribute.
+Owner: Start Today, LLC. Public repository (no auth required to consume) — but the package itself is unlicensed; do not redistribute as your own.
 
 ## What lives here
 
