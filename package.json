@@ -1,0 +1,32 @@
+{
+  "name": "@start-today/platform-shared",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Shared components used across the Start Today platform (sales.starttoday.biz, client-dashboard, chamber, attorney, etc.)",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./orgmap": "./src/orgmap/index.js",
+    "./orgmap/tokens": "./src/orgmap/tokens.js"
+  },
+  "files": [
+    "src",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "lint:braces": "node scripts/brace-check.js src"
+  },
+  "peerDependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "d3": "^7.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Starttodaybiz/platform-shared.git"
+  },
+  "keywords": ["start-today", "react", "d3", "org-map", "compliance"],
+  "license": "UNLICENSED",
+  "author": "Start Today, LLC"
+}
