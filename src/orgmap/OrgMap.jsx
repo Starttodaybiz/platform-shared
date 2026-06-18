@@ -107,7 +107,6 @@ export default function OrgMap({
   height = '640px',
   // Interactions
   onNodeClick = null,
-  renderNodeDetail = null,
   // Phase 2 feature flags — accepted now so consumers can pass them without
   // breaking when the plugins ship.
   carlLensEnabled: _carlLens = false,
@@ -127,7 +126,6 @@ export default function OrgMap({
   const simRef = useRef(null)
   const zoomRef = useRef(null)
   const [selectedNode, setSelectedNode] = useState(null)
-  const [hoverNode, setHoverNode] = useState(null)
   const [zoomLevel, setZoomLevel] = useState(1)
 
   // d3 effect — runs whenever the graph data changes
@@ -361,8 +359,8 @@ export default function OrgMap({
       })
     })
 
-    nd.on('mouseenter', (e, d) => setHoverNode(d))
-    nd.on('mouseleave', () => setHoverNode(null))
+    nd.on('mouseenter', null)
+    nd.on('mouseleave', null)
 
     // Background click clears the highlight
     svg.on('click', () => {
@@ -463,107 +461,95 @@ export default function OrgMap({
     <div
       ref={containerRef}
       style={{
-        display: 'grid',
-        gridTemplateColumns: selectedNode ? '1fr 320px' : '1fr',
-        gap: 12,
-        height,
-        fontFamily: fontSans,
-        color: chrome.text,
-      }}
-    >
-      {/* ─── Map surface ─── */}
-      <div style={{
         position: 'relative',
+        width: '100%',
+        height,
         background: chrome.white,
         border: `1px solid ${chrome.border}`,
         borderRadius: 10,
         overflow: 'hidden',
+        fontFamily: fontSans,
+        color: chrome.text,
+      }}
+    >
+      {loading && (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'rgba(255,255,255,0.7)', zIndex: 5,
+          color: chrome.muted, fontSize: 12,
+        }}>Loading map…</div>
+      )}
+
+      {!fd || totalNodes === 0 ? (
+        <div style={{
+          position: 'absolute', inset: 0,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: chrome.muted, fontSize: 12,
+        }}>{emptyMessage}</div>
+      ) : (
+        <svg
+          ref={svgRef}
+          style={{ width: '100%', height: '100%', display: 'block', background: chrome.bg }}
+        />
+      )}
+
+      {/* Zoom controls (top-right) */}
+      <div style={{
+        position: 'absolute', top: 12, right: 12,
+        display: 'flex', flexDirection: 'column', gap: 4,
+        background: chrome.white, border: `1px solid ${chrome.border}`,
+        borderRadius: 7, padding: 4, boxShadow: '0 1px 3px rgba(0,0,0,.06)',
       }}>
-        {loading && (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'rgba(255,255,255,0.7)', zIndex: 5,
-            color: chrome.muted, fontSize: 12,
-          }}>Loading map…</div>
-        )}
-
-        {!fd || totalNodes === 0 ? (
-          <div style={{
-            position: 'absolute', inset: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: chrome.muted, fontSize: 12,
-          }}>{emptyMessage}</div>
-        ) : (
-          <svg
-            ref={svgRef}
-            style={{ width: '100%', height: '100%', display: 'block', background: chrome.bg }}
-          />
-        )}
-
-        {/* Zoom controls (top-right) */}
-        <div style={{
-          position: 'absolute', top: 12, right: 12,
-          display: 'flex', flexDirection: 'column', gap: 4,
-          background: chrome.white, border: `1px solid ${chrome.border}`,
-          borderRadius: 7, padding: 4, boxShadow: '0 1px 3px rgba(0,0,0,.06)',
-        }}>
-          <button onClick={() => zoomBy(1.4)} title="Zoom in" style={zBtn(chrome)}>+</button>
-          <button onClick={() => zoomBy(0.7)} title="Zoom out" style={zBtn(chrome)}>−</button>
-          <button onClick={resetZoom} title="Reset view" style={zBtn(chrome)}>⊙</button>
-        </div>
-
-        {/* Legend strip (bottom-left) */}
-        {nodeTypes.length > 0 && (
-          <div style={{
-            position: 'absolute', bottom: 12, left: 12,
-            display: 'flex', gap: 12, flexWrap: 'wrap',
-            background: chrome.white, border: `1px solid ${chrome.border}`,
-            borderRadius: 7, padding: '7px 11px',
-            fontSize: 10, color: chrome.textSec,
-            maxWidth: 'calc(100% - 110px)',
-          }}>
-            {nodeTypes.slice(0, 9).map(({ type, count, style }) => (
-              <span key={type} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{
-                  width: 10, height: 10, borderRadius: 99,
-                  background: style.fill,
-                  border: `1.5px solid ${style.stroke}`,
-                  flexShrink: 0,
-                }} />
-                <span>{count} {style.label}</span>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Hint strip (top-left) */}
-        <div style={{
-          position: 'absolute', top: 12, left: 12,
-          fontSize: 10, color: chrome.muted,
-          background: chrome.white, padding: '4px 8px',
-          border: `1px solid ${chrome.border}`, borderRadius: 6,
-          pointerEvents: 'none',
-        }}>
-          Drag to pan · scroll to zoom · click a node for detail · zoom {(zoomLevel * 100).toFixed(0)}%
-        </div>
+        <button onClick={() => zoomBy(1.4)} title="Zoom in" style={zBtn(chrome)}>+</button>
+        <button onClick={() => zoomBy(0.7)} title="Zoom out" style={zBtn(chrome)}>−</button>
+        <button onClick={resetZoom} title="Reset view" style={zBtn(chrome)}>⊙</button>
       </div>
 
-      {/* ─── Detail panel ─── */}
-      {selectedNode && (
+      {/* Legend strip (bottom-left) */}
+      {nodeTypes.length > 0 && (
         <div style={{
-          background: chrome.white,
-          border: `1px solid ${chrome.border}`,
-          borderRadius: 10,
-          overflow: 'auto',
+          position: 'absolute', bottom: 12, left: 12,
+          display: 'flex', gap: 12, flexWrap: 'wrap',
+          background: chrome.white, border: `1px solid ${chrome.border}`,
+          borderRadius: 7, padding: '7px 11px',
+          fontSize: 10, color: chrome.textSec,
+          maxWidth: 'calc(100% - 110px)',
         }}>
-          {renderNodeDetail
-            ? renderNodeDetail(selectedNode, { tokens, hoverNode })
-            : <DefaultNodeDetail node={selectedNode} tokens={tokens} />}
+          {nodeTypes.slice(0, 9).map(({ type, count, style }) => (
+            <span key={type} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+              <span style={{
+                width: 10, height: 10, borderRadius: 99,
+                background: style.fill,
+                border: `1.5px solid ${style.stroke}`,
+                flexShrink: 0,
+              }} />
+              <span>{count} {style.label}</span>
+            </span>
+          ))}
         </div>
       )}
+
+      {/* Hint strip (top-left) */}
+      <div style={{
+        position: 'absolute', top: 12, left: 12,
+        fontSize: 10, color: chrome.muted,
+        background: chrome.white, padding: '4px 8px',
+        border: `1px solid ${chrome.border}`, borderRadius: 6,
+        pointerEvents: 'none',
+      }}>
+        Drag to pan · scroll to zoom · click a node for detail · zoom {(zoomLevel * 100).toFixed(0)}%
+      </div>
     </div>
   )
+}
+
+// Optional helper component — consumers can use this in their own layout to
+// render a default detail panel for a selected node. Or they can write their
+// own and ignore this.
+export function NodeDetailPanel({ node, brandTokens = null }) {
+  const tokens = mergeTokens(brandTokens)
+  return <DefaultNodeDetail node={node} tokens={tokens} />
 }
 
 // ─── small style helper ─────────────────────────────────────────────────────

@@ -2,7 +2,7 @@
 //
 // Canonical OrgMap™ visualization for the Start Today ecosystem.
 
-export { default as OrgMap } from './OrgMap.jsx'
+export { default as OrgMap, NodeDetailPanel } from './OrgMap.jsx'
 export { default as xfMindMapNodes } from './xfMindMapNodes.js'
 export {
   TC, ES,
